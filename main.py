@@ -189,7 +189,4 @@ def edit_user(id):
             caso_tipo = request.form["caso_tipo"]
             caso_datas = request.form["caso_datas"]
             caso_detalhes = request.form["caso_detalhes"]
-            caso_partes = request.form["caso_partes"]
-            cur.execute("UPDATE casos SET CLIENTE=?, TIPO=?, DATAS=?, DETALHES=?, PARTES=? WHERE CLIENTE_ID=?", (caso_cliente, caso_tipo, caso_datas, caso_detalhes, caso_partes, id))
-            
-            #
+            caso_partes = request.form["caso_part
