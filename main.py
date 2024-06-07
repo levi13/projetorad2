@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3 as sql
+import os
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = "admin123"  # Chave secreta para sessões
