@@ -1,7 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3 as sql
-import os
-from urllib.parse import quote as url_quote
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = "admin123"  # Chave secreta para sessões
@@ -189,4 +187,72 @@ def edit_user(id):
             caso_tipo = request.form["caso_tipo"]
             caso_datas = request.form["caso_datas"]
             caso_detalhes = request.form["caso_detalhes"]
-            caso_partes = request.form["caso_part
+            caso_partes = request.form["caso_partes"]
+            cur.execute("UPDATE casos SET CLIENTE=?, TIPO=?, DATAS=?, DETALHES=?, PARTES=? WHERE CLIENTE_ID=?", (caso_cliente, caso_tipo, caso_datas, caso_detalhes, caso_partes, id))
+            
+            # Atualizar dados das atividades
+            atividade_descricao = request.form["atividade_descricao"]
+            atividade_data = request.form["atividade_data"]
+            cur.execute("UPDATE atividades SET DESCRICAO=?, DATA=? WHERE CLIENTE_ID=?", (atividade_descricao, atividade_data, id))
+            
+            # Atualizar dados das despesas
+            despesa_tipo = request.form["despesa_tipo"]
+            despesa_descricao = request.form["despesa_descricao"]
+            despesa_valor = request.form["despesa_valor"]
+            cur.execute("UPDATE despesas SET TIPO=?, DESCRICAO=?, VALOR=? WHERE CLIENTE_ID=?", (despesa_tipo, despesa_descricao, despesa_valor, id))
+            
+            # Atualizar dados da avaliação
+            avaliacao_descricao = request.form["avaliacao_descricao"]
+            avaliacao_data = request.form["avaliacao_data"]
+            avaliacao_status = request.form["avaliacao_status"]
+            avaliacao_passos = request.form["avaliacao_passos"]
+            cur.execute("UPDATE avaliacoes SET DESCRICAO=?, DATA=?, STATUS=?, PASSOS=? WHERE CLIENTE_ID=?", (avaliacao_descricao, avaliacao_data, avaliacao_status, avaliacao_passos, id))
+            
+            con.commit()
+            flash("Dados atualizados", "success")
+            return redirect(url_for("admin_page"))
+        
+        cur.execute("SELECT * FROM users WHERE ID=?", (id,))
+        user_data = cur.fetchone()
+        
+        # Obter dados do caso
+        cur.execute("SELECT * FROM casos WHERE CLIENTE_ID=?", (id,))
+        caso_data = cur.fetchone()
+        
+        # Obter dados das atividades
+        cur.execute("SELECT * FROM atividades WHERE CLIENTE_ID=?", (id,))
+        atividades_data = cur.fetchall()
+        
+        # Obter dados das despesas
+        cur.execute("SELECT * FROM despesas WHERE CLIENTE_ID=?", (id,))
+        despesas_data = cur.fetchall()
+        
+        # Obter dados da avaliação
+        cur.execute("SELECT * FROM avaliacoes WHERE CLIENTE_ID=?", (id,))
+        avaliacoes_data = cur.fetchall()
+        
+        return render_template("edit_user.html", user_data=user_data, caso_data=caso_data, atividades_data=atividades_data, despesas_data=despesas_data, avaliacoes_data=avaliacoes_data)
+    else:
+        flash("Acesso negado, redirecionando para a página anterior em 5 segundos.", "danger")
+        return render_template('redirect2.html', target=url_for('admin_page'), delay=5)
+
+@app.route("/delete_user/<int:id>", methods=["GET"])
+def delete_user(id):
+    if 'username' in session and session['tplog'] == 'Admin':
+        con = connect_db()
+        cur = con.cursor()
+        cur.execute("DELETE FROM users WHERE ID=?", (id,))
+        cur.execute("DELETE FROM casos WHERE CLIENTE_ID=?", (id,))
+        cur.execute("DELETE FROM atividades WHERE CLIENTE_ID=?", (id,))
+        cur.execute("DELETE FROM despesas WHERE CLIENTE_ID=?", (id,))
+        cur.execute("DELETE FROM avaliacoes WHERE CLIENTE_ID=?", (id,))
+        con.commit()
+        flash("Dados deletados", "warning")
+        return redirect(url_for("admin_page"))
+    else:
+        flash("Acesso negado, redirecionando para a página anterior em 5 segundos.", "danger")
+        return render_template('redirect2.html', target=url_for('admin_page'), delay=5)
+
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, host='0.0.0.0', port=port)
